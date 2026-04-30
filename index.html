@@ -244,30 +244,7 @@ p { font-size: var(--body-size); line-height: 1.7; color: var(--text-secondary);
     object-fit: cover;
 }
 
-/* Fix #5-4: Loop fade — masks black-frame at video loop point
-   Each video gets a pseudo overlay that flashes briefly at ~97% of the
-   INTERVAL (6000ms), creating a smooth visual bridge over the loop gap. */
-.carousel-video::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: rgba(0, 0, 0, 1);
-    z-index: 1;
-    animation: loopFade 6s linear infinite;
-    pointer-events: none;
-}
-
-.carousel-video:nth-child(1)::before { animation-delay: 0s; }
-.carousel-video:nth-child(2)::before { animation-delay: 1.5s; }
-.carousel-video:nth-child(3)::before { animation-delay: 3s; }
-.carousel-video:nth-child(4)::before { animation-delay: 4.5s; }
-
-@keyframes loopFade {
-    0%   { background: rgba(0,0,0,1); }
-    4%   { background: rgba(0,0,0,0); }
-    96%  { background: rgba(0,0,0,0); }
-    100% { background: rgba(0,0,0,1); }
-}
+/* No loop fade overlay — removed to prevent mid-playback flash artifacts */
 
 /* Dark tint — only applied in hero-mode for text readability */
 #video-carousel::after {
@@ -1277,16 +1254,17 @@ a.contact-item-value:hover { color: var(--accent-warm); }
     .hero-content { grid-template-columns: 1fr; }
     .hero-meta { display: none; }
 
-    /* work-slide：小屏解除固定高度约束，grid 内部滚动 */
+    /* work-slide：小屏保持 100vh snap 点，内容内部滚动 */
     .work-slide {
-        overflow: visible;
-        height: auto;
-        min-height: 100vh;
+        overflow: hidden;
+        height: 100vh;
+        height: 100dvh;
     }
     .work-slide .slide-content {
         justify-content: flex-start;
-        overflow: visible;
-        max-height: none;
+        overflow-y: auto;
+        max-height: 100%;
+        -webkit-overflow-scrolling: touch;
     }
     .work-grid {
         /* 3列布局：小屏保留权重感
@@ -1315,8 +1293,8 @@ a.contact-item-value:hover { color: var(--accent-warm); }
 @media (max-width: 600px) {
     .intro-container { grid-template-columns: 1fr; }
     .intro-image { max-height: 300px; overflow: hidden; }
-    /* 600px：改为纵向单列，滚动由页面处理 */
-    .work-slide { min-height: auto; }
+    /* 600px：slide-4 内部滚动保持 */
+    .work-slide .slide-content { overflow-y: auto; }
     .work-grid {
         grid-template-columns: 1fr;
         grid-template-rows: auto;
@@ -1375,17 +1353,17 @@ a.contact-item-value:hover { color: var(--accent-warm); }
             </video>
         </div>
         <div class="carousel-video" data-index="1">
-            <video autoplay muted loop playsinline preload="auto">
+            <video muted loop playsinline preload="none">
                 <source src="assets/动物保护.mp4" type="video/mp4">
             </video>
         </div>
         <div class="carousel-video" data-index="2">
-            <video autoplay muted loop playsinline preload="auto">
+            <video muted loop playsinline preload="none">
                 <source src="assets/城市革新v2.mp4" type="video/mp4">
             </video>
         </div>
         <div class="carousel-video" data-index="3">
-            <video autoplay muted loop playsinline preload="auto">
+            <video muted loop playsinline preload="none">
                 <source src="assets/人文生活.mp4" type="video/mp4">
             </video>
         </div>
@@ -1742,28 +1720,9 @@ class SlidePresentation {
         });
     }
 
-    /* Touch/Swipe Navigation */
+    /* Touch/Swipe Navigation — handled inside setupVideoCarousel for position system access */
     setupTouchNav() {
-        let startY = 0;
-        let startTime = 0;
-
-        document.addEventListener('touchstart', (e) => {
-            startY = e.touches[0].clientY;
-            startTime = Date.now();
-        }, { passive: true });
-
-        document.addEventListener('touchend', (e) => {
-            const endY = e.changedTouches[0].clientY;
-            const endTime = Date.now();
-            const diff = startY - endY;
-            const duration = endTime - startTime;
-
-            // Only register as swipe if fast enough and long enough
-            if (duration < 400 && Math.abs(diff) > 60) {
-                if (diff > 0) this.nextSlide();
-                else this.prevSlide();
-            }
-        }, { passive: true });
+        // Stub: actual touch logic is in setupVideoCarousel
     }
 
     /* Progress Bar */
@@ -1839,7 +1798,19 @@ class SlidePresentation {
 
         /* ---- 激活视频 ---- */
         const activateVideo = (videoIndex) => {
-            videos.forEach((v, n) => v.classList.toggle('active', n === videoIndex));
+            videos.forEach((v, n) => {
+                const isActive = n === videoIndex;
+                v.classList.toggle('active', isActive);
+                const video = v.querySelector('video');
+                if (isActive) {
+                    if (video.preload !== 'auto') video.preload = 'auto';
+                    video.play().catch(() => {});
+                } else {
+                    // 非活跃视频暂停并释放内存
+                    video.pause();
+                    video.preload = 'none';
+                }
+            });
             getLabels().forEach((l, n) => l.classList.toggle('active', n === videoIndex));
             if (barFill) {
                 barFill.style.transition = 'none';
@@ -1993,7 +1964,7 @@ class SlidePresentation {
 
                 if (id === 'slide-1') {
                     position = 0;
-                    wheelLocked = false;
+                    // 不在这里解锁 wheelLocked，让 goToPosition 的定时器统一管理
                     carousel.classList.add('hero-mode');
                     labelsEl.classList.remove('visible');
                     heroContent.style.opacity = '1';
@@ -2010,7 +1981,7 @@ class SlidePresentation {
                 } else if (slideToPos[id] !== undefined) {
                     // slide-3 ~ slide-6
                     position = slideToPos[id];
-                    wheelLocked = false;
+                    // 不在这里解锁 wheelLocked，防止 smooth scroll 未完成就跳页
                     carousel.classList.remove('hero-mode');
                     labelsEl.classList.add('visible');
                     heroContent.style.opacity = '0';
@@ -2020,6 +1991,60 @@ class SlidePresentation {
 
         this.slides.forEach(s => carouselObserver.observe(s));
         window.addEventListener('wheel', onWheel, { passive: false });
+
+        /* ---- Touch/Swipe Navigation (mobile) ---- */
+        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        if (!isTouchDevice) return;
+
+        let touchStartY = 0;
+        let touchAccum = 0;
+        let isTouching = false;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+            touchAccum = 0;
+            isTouching = true;
+        }, { passive: true });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!isTouching) return;
+
+            const currentY = e.touches[0].clientY;
+            touchAccum += touchStartY - currentY;
+            touchStartY = currentY;
+
+            // 锁定期间：始终阻止原生滚动
+            if (wheelLocked) { e.preventDefault(); return; }
+
+            // slide-4 是长页面，允许原生滚动
+            if (posToSlideId(position) === 'slide-4') return;
+
+            // 其他 slide：阻止原生滚动，由 touchend 通过 goToPosition 控制
+            e.preventDefault();
+        }, { passive: false });
+
+        document.addEventListener('touchend', (e) => {
+            if (!isTouching) return;
+            isTouching = false;
+
+            if (wheelLocked) return;
+
+            // slide-4 由原生滚动处理，JS 不干预
+            if (posToSlideId(position) === 'slide-4') return;
+
+            if (Math.abs(touchAccum) < 30) return;
+
+            const direction = touchAccum > 0 ? 1 : -1;
+            const newPos = position + direction;
+
+            if (newPos < 0 || newPos > MAX_POS) return;
+
+            const currentSlideId = posToSlideId(position);
+            const targetSlideId = posToSlideId(newPos);
+            const sameSlide = currentSlideId === targetSlideId;
+
+            goToPosition(newPos, sameSlide ? VIDEO_LOCK_MS : TRANSITION_LOCK_MS, position);
+        }, { passive: true });
     }
 
     /* Scroll Hint */
