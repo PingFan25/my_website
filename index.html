@@ -260,15 +260,16 @@ strong { font-weight: 700; }
 }
 
 /* Prominent 4-field labels — clickable buttons */
+/* 独立于 #video-carousel 外部，z-index 高于 slides，确保始终可点击 */
 .carousel-labels {
-    position: absolute;
+    position: fixed;
     bottom: 5.5rem;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
     align-items: center;
     gap: 3rem;
-    z-index: 10;
+    z-index: 50;           /* 高于所有 slide 层 */
     opacity: 0;
     transition: opacity 0.6s ease;
 }
@@ -313,8 +314,10 @@ strong { font-weight: 700; }
     pointer-events: none;
 }
 
-.carousel-label:hover .carousel-label-underline {
-    width: 100%;
+@media (hover: hover) {
+    .carousel-label:hover .carousel-label-underline {
+        width: 100%;
+    }
 }
 
 .carousel-label:active {
@@ -704,6 +707,7 @@ strong { font-weight: 700; }
 
 /* ======== 响应式 ======== */
 @media (max-width: 900px) {
+    .carousel-label::after { display: none; }
     .intro-slide {
         grid-template-columns: 1fr;
         grid-template-rows: auto 1fr;
@@ -716,16 +720,7 @@ strong { font-weight: 700; }
         object-position: 20% center;   /* 竖屏更偏左保住人物 */
     }
     .intro-image-col::after {
-        bottom: 0;
-        right: 0;
-        width: 100%;
-        height: 120px;
-        background: linear-gradient(180deg,
-            transparent 0%,
-            rgba(10, 10, 8, 0.5) 40%,
-            rgba(10, 10, 8, 0.88) 70%,
-            var(--bg-primary) 100%
-        );
+        display: none;             /* 手机端上下布局，不需要渐变遮罩 */
     }
     .intro-text-col {
         padding: clamp(1.5rem, 4vw, 2.5rem);
@@ -1368,20 +1363,20 @@ a.contact-item-value:hover { color: var(--accent-warm); }
         </div>
     </div>
 
-    <!-- Prominent 4-field labels (clickable to switch videos) -->
-    <div class="carousel-labels">
-        <button class="carousel-label active" data-index="0">自然环境<span class="carousel-label-underline"></span></button>
-        <button class="carousel-label" data-index="1">动物保护<span class="carousel-label-underline"></span></button>
-        <button class="carousel-label" data-index="2">城市革新<span class="carousel-label-underline"></span></button>
-        <button class="carousel-label" data-index="3">人文生活<span class="carousel-label-underline"></span></button>
-    </div>
-
     <!-- Progress bar per video -->
     <div class="carousel-progress">
         <div class="carousel-bar-track">
             <div class="carousel-bar-fill" id="carouselBarFill"></div>
         </div>
     </div>
+</div>
+
+<!-- Prominent 4-field labels — 独立于 carousel 外，确保不被 slide 层遮挡 -->
+<div class="carousel-labels" id="carouselLabels">
+    <button class="carousel-label active" data-index="0">自然环境<span class="carousel-label-underline"></span></button>
+    <button class="carousel-label" data-index="1">动物保护<span class="carousel-label-underline"></span></button>
+    <button class="carousel-label" data-index="2">城市革新<span class="carousel-label-underline"></span></button>
+    <button class="carousel-label" data-index="3">人文生活<span class="carousel-label-underline"></span></button>
 </div>
 
 <!-- =========================================
@@ -1779,7 +1774,7 @@ class SlidePresentation {
     */
     setupVideoCarousel() {
         const carousel   = document.getElementById('video-carousel');
-        const labelsEl   = carousel.querySelector('.carousel-labels');
+        const labelsEl   = document.getElementById('carouselLabels');
         const videos     = carousel.querySelectorAll('.carousel-video');
         const barFill    = document.getElementById('carouselBarFill');
         const INTERVAL   = 6000;
@@ -1790,7 +1785,7 @@ class SlidePresentation {
         let wheelLocked   = false;  // 跳转锁定中
         let lastDirection = 1;      // 1=下滚, -1=上滚
         
-        const getLabels = () => carousel.querySelectorAll('.carousel-label');
+        const getLabels = () => labelsEl.querySelectorAll('.carousel-label');
 
         /* ---- 激活视频 ---- */
         const activateVideo = (videoIndex) => {
@@ -1847,10 +1842,12 @@ class SlidePresentation {
                 heroContent.style.opacity = '1';
             } else {
                 carousel.classList.remove('hero-mode');
-                labelsEl.classList.add('visible');
                 heroContent.style.opacity = '0';
                 if (position >= 1 && position <= 4) {
+                    labelsEl.classList.add('visible');
                     activateVideo(position - 1);
+                } else {
+                    labelsEl.classList.remove('visible');
                 }
             }
 
@@ -1979,7 +1976,7 @@ class SlidePresentation {
                     position = slideToPos[id];
                     // 不在这里解锁 wheelLocked，防止 smooth scroll 未完成就跳页
                     carousel.classList.remove('hero-mode');
-                    labelsEl.classList.add('visible');
+                    labelsEl.classList.remove('visible');
                     heroContent.style.opacity = '0';
                 }
             });
@@ -2027,6 +2024,34 @@ class SlidePresentation {
 
             // slide-4 由原生滚动处理，JS 不干预
             if (posToSlideId(position) === 'slide-4') return;
+
+            // ---- 检测轻触 tap（移动距离 < 10px）→ 触发标签点击跳转 ----
+            if (Math.abs(touchAccum) < 10) {
+                const tapped = document.elementFromPoint(
+                    e.changedTouches[0].clientX,
+                    e.changedTouches[0].clientY
+                );
+                if (tapped) {
+                    const label = tapped.closest('.carousel-label');
+                    if (label) {
+                        const videoIdx = parseInt(label.dataset.index);
+                        if (!isNaN(videoIdx)) {
+                            activateVideo(videoIdx);
+                            position = videoIdx + 1;
+                            return;
+                        }
+                    }
+                    const heading = tapped.closest('.clickable-heading[data-video]');
+                    if (heading) {
+                        const videoIdx = parseInt(heading.dataset.video);
+                        if (!isNaN(videoIdx)) {
+                            activateVideo(videoIdx);
+                            position = videoIdx + 1;
+                            return;
+                        }
+                    }
+                }
+            }
 
             if (Math.abs(touchAccum) < 30) return;
 
