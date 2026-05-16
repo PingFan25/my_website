@@ -1462,13 +1462,12 @@ a.contact-item-value:hover { color: var(--accent-warm); }
 
     /* 手机端底部余量统一：slide3/4/5 下滑到底部时有足够余量 */
     .intro-slide .slide-content,
-    .work-slide .slide-content,
     .skills-slide .slide-content {
         padding-bottom: 3.5rem;
     }
-    /* slide4 底部余量加大 */
-    .work-slide .slide-content {
-        padding-bottom: 5rem;
+    /* slide4 底部余量加大：给最后一个 work-item 加 margin-bottom */
+    .work-item[data-work="5"] {
+        margin-bottom: 5rem !important;
     }
 }
 
@@ -1493,6 +1492,7 @@ a.contact-item-value:hover { color: var(--accent-warm); }
         grid-template-columns: 1fr;
         grid-template-rows: auto;
         overflow-y: visible;
+        margin-bottom: 4rem;
     }
     .work-item[data-work="0"],
     .work-item[data-work="1"],
@@ -1517,6 +1517,18 @@ a.contact-item-value:hover { color: var(--accent-warm); }
     }
     html { scroll-behavior: auto; }
     .hero-orb { animation: none; }
+}
+
+/* 手机端 slide4 底部余量：实体空白元素 */
+.mobile-bottom-spacer {
+    height: 6rem;
+    background: transparent;
+}
+
+@media (min-width: 901px) {
+    .mobile-bottom-spacer {
+        display: none;
+    }
 }
 
 /* Skip to content (a11y) */
@@ -1788,6 +1800,7 @@ a.contact-item-value:hover { color: var(--accent-warm); }
                 </div>
             </div>
         </div>
+        <div class="mobile-bottom-spacer"></div>
     </div>
 </section>
 
