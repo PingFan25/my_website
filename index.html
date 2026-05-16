@@ -56,10 +56,10 @@
     --gradient-orb-1: radial-gradient(ellipse at 20% 50%, rgba(74,103,65,0.15) 0%, transparent 60%);
     --gradient-orb-2: radial-gradient(ellipse at 80% 30%, rgba(196,168,130,0.12) 0%, transparent 55%);
 
-    /* Typography — 系统预装字体，零加载延迟 */
-    --font-display: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    --font-serif: Georgia, 'Palatino Linotype', 'STSong', serif;
-    --font-body: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    /* Typography — Apple SF Pro 栈，macOS/iOS 渲染 SF Pro，Windows 回退系统字体 */
+    --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+    --font-serif: -apple-system, BlinkMacSystemFont, 'SF Pro Display', Georgia, 'Palatino Linotype', 'STSong', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
 
     /* Sizing */
     --title-size: clamp(2.5rem, 7vw, 6rem);
@@ -90,7 +90,6 @@
 
 html {
     scroll-snap-type: y mandatory;
-    scroll-behavior: smooth;
     height: 100%;
 }
 
@@ -147,22 +146,23 @@ strong { font-weight: 700; }
     z-index: 1000;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 6px;
 }
 
 .nav-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
+    width: 4px;
+    height: 16px;
+    border-radius: 2px;
     background: var(--text-muted);
     cursor: pointer;
-    transition: all var(--duration-fast) var(--ease-out-quart);
+    transition: height 0.5s, opacity 0.5s, background 0.5s;
     border: none;
     padding: 0;
+    opacity: 0.4;
 }
 
-.nav-dot:hover { background: var(--text-secondary); transform: scale(1.3); }
-.nav-dot.active { background: var(--accent-green-light); transform: scale(1.4); }
+.nav-dot:hover { background: var(--text-secondary); opacity: 0.7; }
+.nav-dot.active { background: var(--accent-green-light); opacity: 1; height: 48px; }
 
 /* ===========================================
    PROGRESS BAR
@@ -171,11 +171,17 @@ strong { font-weight: 700; }
     position: fixed;
     top: 0;
     left: 0;
-    height: 2px;
+    height: 4px;
     background: linear-gradient(90deg, var(--accent-green), var(--accent-warm));
     z-index: 1001;
     width: 0%;
-    transition: width 0.2s linear;
+    transition: width 1s, opacity 1s;
+    opacity: 1;
+}
+.progress-bar.loaded {
+    width: 100%;
+    opacity: 0;
+    transition: width 0s, opacity .25s 1s;
 }
 
 /* ===========================================
@@ -1125,19 +1131,23 @@ strong { font-weight: 700; }
 
 .skills-grid {
     display: grid;
-    /* 5张卡片均分一行，大屏更舒展 */
-    grid-template-columns: repeat(5, 1fr);
-    gap: clamp(0.8rem, 1.5vw, 1.2rem);
+    grid-template-columns: repeat(2, 1fr);
+    gap: clamp(1rem, 2vw, 1.5rem);
     margin-top: clamp(2rem, 4vh, 3rem);
 }
 
 .skill-card {
-    background: var(--bg-card);
-    border: 1px solid rgba(154,149,144,0.1);
-    padding: clamp(1.5rem, 2.5vw, 2rem);
+    background: rgba(26, 26, 22, 0.45);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(154,149,144,0.12);
+    border-radius: 16px;
+    padding: clamp(1.5rem, 2.5vw, 2.2rem);
     transition: all var(--duration-fast) var(--ease-out-quart);
     position: relative;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .skill-card::before {
@@ -1152,26 +1162,53 @@ strong { font-weight: 700; }
 }
 .skill-card:hover::before { transform: scaleX(1); }
 .skill-card:hover {
-    background: var(--bg-card-hover);
+    background: rgba(34, 34, 32, 0.55);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     transform: translateY(-4px);
     border-color: rgba(154,149,144,0.2);
 }
 
-.skill-icon {
-    font-size: clamp(1.5rem, 2.5vw, 2rem);
-    margin-bottom: 1rem;
-}
-.skill-name {
+.skill-title {
     font-family: var(--font-display);
-    font-size: clamp(0.9rem, 1.3vw, 1.1rem);
+    font-size: clamp(1.05rem, 1.6vw, 1.25rem);
     font-weight: 600;
     color: var(--text-primary);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.2rem;
+}
+.skill-subtitle {
+    font-family: var(--font-display);
+    font-size: var(--small-size);
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+    margin-bottom: 1rem;
+}
+.skill-tagline {
+    font-size: clamp(0.82rem, 1.1vw, 0.92rem);
+    color: var(--accent-warm);
+    line-height: 1.6;
+    margin-bottom: 0.75rem;
 }
 .skill-desc {
     font-size: var(--small-size);
     color: var(--text-muted);
-    line-height: 1.6;
+    line-height: 1.7;
+    flex: 1;
+}
+.skill-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1.2rem;
+}
+.skill-tag {
+    font-size: clamp(0.6rem, 0.85vw, 0.72rem);
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(154,149,144,0.15);
+    border-radius: 999px;
+    padding: 0.25rem 0.65rem;
+    white-space: nowrap;
 }
 
 /* ===========================================
@@ -1217,8 +1254,11 @@ strong { font-weight: 700; }
     align-items: center;
     gap: 1rem;
     padding: 1rem 1.2rem;
-    background: var(--bg-card);
-    border: 1px solid rgba(154,149,144,0.1);
+    background: rgba(26, 26, 22, 0.45);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(154,149,144,0.12);
+    border-radius: 16px;
     transition: all var(--duration-fast) var(--ease-out-quart);
     position: relative;
     overflow: hidden;
@@ -1236,7 +1276,7 @@ strong { font-weight: 700; }
     transition: transform 0.4s var(--ease-out-quart);
 }
 
-.contact-item:hover { transform: translateY(-3px); background: var(--bg-card-hover); border-color: rgba(154,149,144,0.2); }
+.contact-item:hover { transform: translateY(-3px); background: rgba(34, 34, 32, 0.55); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-color: rgba(154,149,144,0.2); }
 .contact-item:hover::before { transform: scaleX(1); }
 
 .contact-item-icon {
@@ -1320,7 +1360,6 @@ a.contact-item-value:hover { color: var(--accent-warm); }
     .contact-slide { grid-template-columns: 1fr; }
     .about-image-col { height: 40vh; }
     .about-image-overlay { background: linear-gradient(180deg, transparent 60%, var(--bg-secondary) 100%); }
-    .skills-grid { grid-template-columns: repeat(3, 1fr); }
     .contact-slide { display: flex; align-items: center; justify-content: center; }
     .hero-content { grid-template-columns: 1fr; }
     .hero-meta { display: none; }
@@ -1364,8 +1403,9 @@ a.contact-item-value:hover { color: var(--accent-warm); }
 @media (max-width: 600px) {
     .intro-container { grid-template-columns: 1fr; }
     .intro-image { max-height: 300px; overflow: hidden; }
-    /* 600px：slide-4 内部滚动保持 */
-    .work-slide .slide-content { overflow-y: auto; }
+    /* 600px：slide-4 / slide-5 内部滚动保持 */
+    .work-slide .slide-content,
+    .skills-slide .slide-content { overflow-y: auto; }
     .work-grid {
         grid-template-columns: 1fr;
         grid-template-rows: auto;
@@ -1383,7 +1423,7 @@ a.contact-item-value:hover { color: var(--accent-warm); }
         height: 280px;
     }
     .about-stats { grid-template-columns: repeat(3, 1fr); gap: 1rem; }
-    .skills-grid { grid-template-columns: repeat(2, 1fr); }
+    .skills-grid { grid-template-columns: 1fr; }
     .nav-dots { right: 0.5rem; }
 }
 
@@ -1668,29 +1708,52 @@ a.contact-item-value:hover { color: var(--accent-warm); }
 
         <div class="skills-grid">
             <div class="skill-card reveal">
-                <div class="skill-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green-light)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/><line x1="17" y1="17" x2="22" y2="17"/></svg></div>
-                <div class="skill-name">影像创作</div>
-                <div class="skill-desc">涵盖商业拍摄、纪实、视频播客等多种形式，具备在复杂户外下的专业拍摄经验；擅长通过光影构图，将纪实镜头赋予电影质感。</div>
+                <div class="skill-title">影像创作</div>
+                <div class="skill-subtitle">Cinematography & Directing</div>
+                <div class="skill-tagline">用电影级的镜头语言，捕捉真实的情绪与张力。</div>
+                <div class="skill-desc">涵盖商业拍摄、纪实、短视频及视频播客等全媒介形态。具备极端、复杂户外环境下的极限专业拍摄经验；擅长通过考究的光影构图，将纪实镜头赋予高水准的电影质感，构建不可替代的视觉资产。</div>
+                <div class="skill-tags">
+                    <span class="skill-tag">高规格画质交付</span>
+                    <span class="skill-tag">户外拍摄</span>
+                    <span class="skill-tag">纪实美学</span>
+                    <span class="skill-tag">视听叙事</span>
+                </div>
             </div>
             <div class="skill-card reveal">
-                <div class="skill-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-warm)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg></div>
-                <div class="skill-name">后期艺术</div>
-                <div class="skill-desc">熟练运用 DaVinci Resolve 调色，还原自然、通透的纪实色彩。熟练运用 Premiere Pro 与 After Effects，在流畅的剪辑节奏中穿插动态视觉传达。</div>
+                <div class="skill-title">后期艺术</div>
+                <div class="skill-subtitle">Post-Production Art</div>
+                <div class="skill-tagline">在剪辑节奏与色彩重塑中，完成创意的最终落地。</div>
+                <div class="skill-desc">运用 DaVinci Resolve 色彩科学，擅长还原自然、通透且具高级感的纪实影调。熟练整合 Premiere Pro 与 After Effects，在精准、流畅的剪辑节奏中穿插现代动态图形（MG），实现高完成度的数字视觉传达。</div>
+                <div class="skill-tags">
+                    <span class="skill-tag">达芬奇调色</span>
+                    <span class="skill-tag">影调控制</span>
+                    <span class="skill-tag">动态图形(MG)</span>
+                    <span class="skill-tag">精细化剪辑</span>
+                </div>
             </div>
             <div class="skill-card reveal">
-                <div class="skill-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green-light)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg></div>
-                <div class="skill-name">内容工程</div>
-                <div class="skill-desc">具备从选题研究、叙事结构设计到分镜与旁白撰写的完整创作能力，强调内容逻辑与观看体验。</div>
+                <div class="skill-title">内容工程与项目协作</div>
+                <div class="skill-subtitle">Content Engineering & Collaboration</div>
+                <div class="skill-tagline">兼具独立创作的深度与标准化的现代项目协作流。</div>
+                <div class="skill-desc">具备从选题研究、叙事结构设计到分镜与旁白撰写的全链路创作能力，高度强调内容逻辑与受众体验。拥有极强的单兵作战交付能力与跨部门沟通机制，确保在复杂的多人协作中，严控创作方向、执行效率与交付质量。</div>
+                <div class="skill-tags">
+                    <span class="skill-tag">全链路策划</span>
+                    <span class="skill-tag">分镜与叙事结构</span>
+                    <span class="skill-tag">敏捷项目协作</span>
+                    <span class="skill-tag">高效率交付</span>
+                </div>
             </div>
             <div class="skill-card reveal">
-                <div class="skill-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-warm)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/></svg></div>
-                <div class="skill-name">可持续议题创作</div>
-                <div class="skill-desc">长期关注城市生态与自然环境相关议题。将社会观察转化为具有思考深度的影像表达。</div>
-            </div>
-            <div class="skill-card reveal">
-                <div class="skill-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green-light)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-                <div class="skill-name">项目协作</div>
-                <div class="skill-desc">具备丰富的单兵作战经验，同时擅长跨部门沟通，在多人协作中维持创作方向与执行效率。</div>
+                <div class="skill-title">可持续议题研究</div>
+                <div class="skill-subtitle">Sustainability Topics</div>
+                <div class="skill-tagline">关注人与自然，将社会观察转化为有思考深度的影像回响。</div>
+                <div class="skill-desc">长期深耕城市生态、自然环境与可持续发展相关议题。不仅记录，更致力于将敏锐的社会观察转化为具有思辨深度与美学价值的影像表达，协助在ESG与社会责任（CSR）领域传递更具格局的声音。</div>
+                <div class="skill-tags">
+                    <span class="skill-tag">城市生态纪录</span>
+                    <span class="skill-tag">ESG议题视觉化</span>
+                    <span class="skill-tag">社会学视角</span>
+                    <span class="skill-tag">绿色商业传播</span>
+                </div>
             </div>
         </div>
     </div>
@@ -1775,12 +1838,13 @@ class SlidePresentation {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('visible');
 
-                    // Update current slide
-                    const slideIndex = Array.from(this.slides).indexOf(entry.target);
-                    if (slideIndex !== -1) {
-                        this.currentSlide = slideIndex;
-                        this.updateNavDots();
-                        this.updateProgressBar();
+                    // Update current slide（动画期间跳过，由 goToPosition 统一管理）
+                    if (!window._smoothScrolling) {
+                        const slideIndex = Array.from(this.slides).indexOf(entry.target);
+                        if (slideIndex !== -1) {
+                            this.currentSlide = slideIndex;
+                            this.updateNavDots();
+                        }
                     }
                 }
             });
@@ -1813,16 +1877,20 @@ class SlidePresentation {
         // Stub: actual touch logic is in setupVideoCarousel
     }
 
-    /* Progress Bar */
+    /* Progress Bar — 页面加载进度，加载完成后淡出 */
     setupProgressBar() {
-        window.addEventListener('scroll', () => this.updateProgressBar());
-    }
+        const bar = this.progressBar;
+        if (!bar) return;
 
-    updateProgressBar() {
-        const scrollTop = window.scrollY;
-        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-        const progress = (scrollTop / docHeight) * 100;
-        this.progressBar.style.width = progress + '%';
+        // 模拟加载进度
+        bar.style.width = '10%';
+        window.addEventListener('load', () => {
+            bar.style.width = '60%';
+            setTimeout(() => {
+                bar.style.width = '100%';
+                bar.classList.add('loaded');
+            }, 400);
+        });
     }
 
     /* Work Item Hover Preview */
@@ -1850,12 +1918,14 @@ class SlidePresentation {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
                 const target = document.querySelector(link.getAttribute('href'));
-                if (target) target.scrollIntoView({ behavior: 'smooth' });
+                if (target) smoothScrollTo(target);
             });
         });
     }
 
     /* Persistent Video Carousel
+       Slides 1-6 mapped to virtual positions for scroll-snap navigation.
+
        对称滚动逻辑（位置系统）：
        - 位置 0 = slide-1
        - 位置 1 = slide-2 + 视频1
@@ -1950,13 +2020,25 @@ class SlidePresentation {
 
             // 仅在跨页时才 scrollIntoView（同页视频切换不需要，且同元素调用会干扰 scroll-snap）
             if (!prevSlideId || prevSlideId !== targetId) {
-                document.getElementById(targetId).scrollIntoView({ behavior: 'smooth' });
+                // 立即更新导航点，不等动画结束
+                const idx = Array.from(this.slides).findIndex(s => s.id === targetId);
+                if (idx !== -1) {
+                    this.currentSlide = idx;
+                    this.updateNavDots();
+                }
+                smoothScrollTo(document.getElementById(targetId)).then(() => { wheelLocked = false; });
+            } else {
+                // 同页视频切换：短延时解锁
+                wheelLocked = true;
+                clearTimeout(goToPosition._timer);
+                goToPosition._timer = setTimeout(() => { wheelLocked = false; }, lockMs);
+                return;
             }
 
-            // 锁定：阻止连续触发
+            // 锁定：跨页时由 smoothScrollTo 完成后自动解锁
             wheelLocked = true;
             clearTimeout(goToPosition._timer);
-            goToPosition._timer = setTimeout(() => { wheelLocked = false; }, lockMs);
+            goToPosition._timer = setTimeout(() => { wheelLocked = false; }, 1200); // 兜底保护
         };
         goToPosition._timer = null;
 
@@ -2026,15 +2108,15 @@ class SlidePresentation {
             if (newPos < 0) {
                 // 位置 0 再上滚 → 留在 slide-1
                 wheelLocked = true;
-                document.getElementById('slide-1').scrollIntoView({ behavior: 'smooth' });
-                setTimeout(() => { wheelLocked = false; }, TRANSITION_LOCK_MS);
+                this.currentSlide = 0; this.updateNavDots();
+                smoothScrollTo(document.getElementById('slide-1')).then(() => { wheelLocked = false; });
                 return;
             }
             if (newPos > MAX_POS) {
                 // 超出最大位置 → 留在 slide-6
                 wheelLocked = true;
-                document.getElementById('slide-6').scrollIntoView({ behavior: 'smooth' });
-                setTimeout(() => { wheelLocked = false; }, TRANSITION_LOCK_MS);
+                this.currentSlide = this.slides.length - 1; this.updateNavDots();
+                smoothScrollTo(document.getElementById('slide-6')).then(() => { wheelLocked = false; });
                 return;
             }
 
@@ -2047,6 +2129,9 @@ class SlidePresentation {
         /* ---- 监听当前页面 ---- */
         const slideToPos = { 'slide-1':0, 'slide-2':4, 'slide-3':5, 'slide-4':6, 'slide-5':7, 'slide-6':8 };
         const carouselObserver = new IntersectionObserver((entries) => {
+            // smoothScrollTo 动画进行中时跳过，避免 position 竞争
+            if (window._smoothScrolling) return;
+
             const heroContent = document.getElementById('slide-1').querySelector('.hero-content');
             entries.forEach(entry => {
                 if (!entry.isIntersecting) return;
@@ -2188,8 +2273,50 @@ class SlidePresentation {
     }
 
     goToSlide(index) {
-        this.slides[index].scrollIntoView({ behavior: 'smooth' });
+        smoothScrollTo(this.slides[index]);
     }
+}
+
+/* ===== Custom Smooth Scroll — Power4.easeOut easing ===== */
+function smoothScrollTo(target, duration = 800) {
+    return new Promise(resolve => {
+        if (typeof target === 'string') target = document.querySelector(target);
+        if (!target) { resolve(); return; }
+        const targetY = target.getBoundingClientRect().top + window.scrollY;
+        const startY = window.scrollY;
+        const distance = targetY - startY;
+        if (Math.abs(distance) < 2) { resolve(); return; }
+
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const dur = prefersReducedMotion ? 50 : duration;
+        let startTime = null;
+        const html = document.documentElement;
+
+        // 标记滚动动画进行中，IntersectionObserver 据此跳过回调
+        window._smoothScrolling = true;
+
+        // 临时禁用 scroll-snap，防止吸附打断缓动
+        html.style.scrollSnapType = 'none';
+
+        // Power4.easeOut: y = 1 - (1 - t)^4
+        function easeOutQuart(t) { return 1 - Math.pow(1 - t, 4); }
+
+        function step(timestamp) {
+            if (!startTime) startTime = timestamp;
+            const elapsed = timestamp - startTime;
+            const progress = Math.min(elapsed / dur, 1);
+            const eased = easeOutQuart(progress);
+            window.scrollTo(0, startY + distance * eased);
+            if (progress < 1) {
+                requestAnimationFrame(step);
+            } else {
+                html.style.scrollSnapType = '';
+                window._smoothScrolling = false;
+                resolve();
+            }
+        }
+        requestAnimationFrame(step);
+    });
 }
 
 // Initialize
