@@ -1523,7 +1523,9 @@ a.contact-item-value:hover { color: var(--accent-warm); }
 <div id="video-carousel">
     <div class="carousel-videos">
         <div class="carousel-video active" data-index="0">
-            <video autoplay muted loop playsinline preload="auto" aria-label="背景视频：自然环境"
+            <video autoplay muted loop playsinline preload="auto"
+                x5-video-player-type="h5" x5-playsinline webkit-playsinline
+                aria-label="背景视频：自然环境"
                 poster="assets/poster_%E8%87%AA%E7%84%B6%E7%8E%AF%E5%A2%83.webp">
                 <source src="assets/hls/%E8%87%AA%E7%84%B6%E7%8E%AF%E5%A2%83/index.m3u8" type="application/vnd.apple.mpegurl">
                 <source src="assets/%E8%87%AA%E7%84%B6%E7%8E%AF%E5%A2%83.mp4" type="video/mp4">
@@ -2486,18 +2488,24 @@ function initHLS() {
         });
     });
 
-    // WeChat WebView: 监听首次用户交互后尝试播放
+    // WeChat WebView: 持续重试播放首个视频，直到成功或用户离开首屏
     if (isWeChat) {
-        const tryPlayFirst = () => {
-            const firstVideo = document.querySelector('.carousel-video.active video');
-            if (firstVideo && firstVideo.paused) {
-                firstVideo.play().catch(() => {});
+        let weChatUnlocked = false;
+        const tryPlayActive = () => {
+            if (weChatUnlocked) return;
+            const active = document.querySelector('.carousel-video.active video');
+            if (active && active.paused && active.readyState >= 2) {
+                active.play().then(() => {
+                    weChatUnlocked = true;
+                    document.removeEventListener('touchstart', tryPlayActive);
+                    document.removeEventListener('touchend', tryPlayActive);
+                    document.removeEventListener('scroll', tryPlayActive);
+                }).catch(() => {});
             }
-            document.removeEventListener('touchstart', tryPlayFirst);
-            document.removeEventListener('click', tryPlayFirst);
         };
-        document.addEventListener('touchstart', tryPlayFirst, { once: true });
-        document.addEventListener('click', tryPlayFirst, { once: true });
+        document.addEventListener('touchstart', tryPlayActive, { passive: true });
+        document.addEventListener('touchend', tryPlayActive, { passive: true });
+        document.addEventListener('scroll', tryPlayActive, { passive: true });
     }
 
     return hlsInstances;
