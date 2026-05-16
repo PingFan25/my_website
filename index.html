@@ -29,6 +29,9 @@
 
 <!-- Fonts: 全部使用系统预装字体，无需外部加载 -->
 
+<!-- HLS.js — streaming playback for .m3u8 -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
+
 <style>
 /* ===========================================
    CSS CUSTOM PROPERTIES (THEME)
@@ -1521,21 +1524,25 @@ a.contact-item-value:hover { color: var(--accent-warm); }
     <div class="carousel-videos">
         <div class="carousel-video active" data-index="0">
             <video autoplay muted loop playsinline preload="auto" aria-label="背景视频：自然环境">
+                <source src="assets/hls/%E8%87%AA%E7%84%B6%E7%8E%AF%E5%A2%83/index.m3u8" type="application/vnd.apple.mpegurl">
                 <source src="assets/%E8%87%AA%E7%84%B6%E7%8E%AF%E5%A2%83.mp4" type="video/mp4">
             </video>
         </div>
         <div class="carousel-video" data-index="1">
             <video muted loop playsinline preload="none" aria-label="背景视频">
+                <source src="assets/hls/%E5%8A%A8%E7%89%A9%E4%BF%9D%E6%8A%A4/index.m3u8" type="application/vnd.apple.mpegurl">
                 <source src="assets/%E5%8A%A8%E7%89%A9%E4%BF%9D%E6%8A%A4.mp4" type="video/mp4">
             </video>
         </div>
         <div class="carousel-video" data-index="2">
             <video muted loop playsinline preload="none" aria-label="背景视频">
+                <source src="assets/hls/%E5%9F%8E%E5%B8%82%E9%9D%A9%E6%96%B0/index.m3u8" type="application/vnd.apple.mpegurl">
                 <source src="assets/%E5%9F%8E%E5%B8%82%E9%9D%A9%E6%96%B0v2.mp4" type="video/mp4">
             </video>
         </div>
         <div class="carousel-video" data-index="3">
             <video muted loop playsinline preload="none" aria-label="背景视频">
+                <source src="assets/hls/%E4%BA%BA%E6%96%87%E7%94%9F%E6%B4%BB/index.m3u8" type="application/vnd.apple.mpegurl">
                 <source src="assets/%E4%BA%BA%E6%96%87%E7%94%9F%E6%B4%BB.mp4" type="video/mp4">
             </video>
         </div>
@@ -2417,8 +2424,41 @@ function smoothScrollTo(target, duration = 800) {
     });
 }
 
+// Initialize HLS.js on all <video> elements with .m3u8 source
+function initHLS() {
+    if (typeof Hls === 'undefined') return;
+    document.querySelectorAll('video').forEach(video => {
+        const hlsSrc = video.querySelector('source[type="application/vnd.apple.mpegurl"]');
+        if (!hlsSrc) return;
+        // Safari natively supports HLS, no need for HLS.js
+        if (video.canPlayType('application/vnd.apple.mpegurl')) return;
+        const hls = new Hls({
+            enableWorker: true,
+            lowLatencyMode: false,
+            maxBufferLength: 30,
+            maxMaxBufferLength: 60,
+        });
+        hls.loadSource(hlsSrc.src);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            if (video.autoplay) video.play().catch(() => {});
+        });
+        hls.on(Hls.Events.ERROR, (event, data) => {
+            if (data.fatal) {
+                // Fallback to mp4 source if HLS fails
+                const mp4Src = video.querySelector('source[type="video/mp4"]');
+                if (mp4Src && !video.querySelector('source[type="video/mp4"].hls-fallback')) {
+                    video.src = mp4Src.src;
+                    video.load();
+                }
+            }
+        });
+    });
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    initHLS();
     new SlidePresentation();
     setupLightbox();
 });
