@@ -1487,12 +1487,14 @@ a.contact-item-value:hover { color: var(--accent-warm); }
         overscroll-behavior-y: contain;
         justify-content: flex-start;
         padding-top: clamp(1.5rem, 4vh, 3rem);
+        padding-bottom: 8rem;
     }
     .work-grid {
         grid-template-columns: 1fr;
         grid-template-rows: auto;
         overflow-y: visible;
-        margin-bottom: 4rem;
+        margin-bottom: 0;
+        flex: none;
     }
     .work-item[data-work="0"],
     .work-item[data-work="1"],
@@ -1519,9 +1521,9 @@ a.contact-item-value:hover { color: var(--accent-warm); }
     .hero-orb { animation: none; }
 }
 
-/* 手机端 slide4 底部余量：实体空白元素 */
+/* 手机端 slide4 底部余量：实体空白元素（双重保障，配合 slide-content 的 padding-bottom） */
 .mobile-bottom-spacer {
-    height: 6rem;
+    height: 10rem;
     background: transparent;
 }
 
