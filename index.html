@@ -779,7 +779,7 @@ strong { font-weight: 700; }
         object-position: 20% center;
     }
     .intro-text-col {
-        padding: clamp(1.5rem, 4vw, 2.5rem);
+        padding: 0.8rem clamp(1.5rem, 4vw, 2.5rem) clamp(1.5rem, 4vw, 2.5rem);
     }
 }
 
@@ -1460,12 +1460,6 @@ a.contact-item-value:hover { color: var(--accent-warm); }
     .hero-content { grid-template-columns: 1fr; }
     .hero-meta { display: none; }
 
-    /* 900px：slide-3 文字上移，底部留白 */
-    .intro-slide .slide-content {
-        justify-content: flex-start;
-        padding-top: clamp(1.5rem, 4vw, 3rem);
-        padding-bottom: clamp(1.5rem, 4vw, 3rem);
-    }
 }
 
 @media (max-width: 600px) {
@@ -1485,14 +1479,6 @@ a.contact-item-value:hover { color: var(--accent-warm); }
         justify-content: flex-start;
         padding-top: clamp(1.5rem, 4vh, 3rem);
         padding-bottom: clamp(1.5rem, 4vh, 3rem);
-    }
-    /* slide3：文字上移，底部留白，内容一页展示 */
-    .intro-slide .slide-content {
-        justify-content: flex-start;
-        padding-top: clamp(1.5rem, 4vh, 3rem);
-        padding-bottom: clamp(1.5rem, 4vh, 3rem);
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
     }
     .work-grid {
         grid-template-columns: 1fr;
