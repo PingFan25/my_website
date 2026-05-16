@@ -2209,9 +2209,20 @@ class SlidePresentation {
 
             if (wheelLocked) return;
 
-            // slide-4 / slide-5 是长页面，允许原生滚动
-            const currentSlideId = posToSlideId(position);
-            if (currentSlideId === 'slide-4' || currentSlideId === 'slide-5') return;
+            // slide-4 / slide-5 是长页面：仅在内容滚到边界时才允许跳页
+            const isLongSlide = currentSlideId === 'slide-4' || currentSlideId === 'slide-5';
+            if (isLongSlide) {
+                const slideEl = document.getElementById(currentSlideId);
+                const scrollable = slideEl.querySelector('.slide-content');
+                const atTop = scrollable.scrollTop <= 1;
+                const atBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 1;
+                const swipingDown = touchAccum > 0;
+                const swipingUp = touchAccum < 0;
+                if (swipingDown && !atBottom) return;  // 内容还没滚到底，不下跳
+                if (swipingUp && !atTop) return;        // 内容还没滚到顶，不上跳
+                // 已在边界且手势足够大，继续走下面的跳页逻辑
+                if (Math.abs(touchAccum) < 50) return;  // 边界处提高阈值，防误触
+            }
 
             // ---- 检测轻触 tap（移动距离 < 10px）→ 触发标签点击跳转 ----
             if (Math.abs(touchAccum) < 10) {
