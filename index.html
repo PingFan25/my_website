@@ -1403,9 +1403,14 @@ a.contact-item-value:hover { color: var(--accent-warm); }
 @media (max-width: 600px) {
     .intro-container { grid-template-columns: 1fr; }
     .intro-image { max-height: 300px; overflow: hidden; }
-    /* 600px：slide-4 / slide-5 内部滚动保持 */
+    /* 600px：slide-4 / slide-5 内部滚动，flex-start 防止居中裁切 */
     .work-slide .slide-content,
-    .skills-slide .slide-content { overflow-y: auto; }
+    .skills-slide .slide-content {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        justify-content: flex-start;
+        padding-top: clamp(1.5rem, 4vh, 3rem);
+    }
     .work-grid {
         grid-template-columns: 1fr;
         grid-template-rows: auto;
