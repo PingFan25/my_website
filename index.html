@@ -1431,6 +1431,12 @@ a.contact-item-value:hover { color: var(--accent-warm); }
 }
 
 @media (max-width: 600px) {
+    .hero-category {
+        border-left: none;
+        border-right: none;
+        padding-left: 0;
+        padding-right: 0;
+    }
     .intro-container { grid-template-columns: 1fr; }
     .intro-image { max-height: 300px; overflow: hidden; }
     /* 600px：slide-4 / slide-5 内部滚动，flex-start 防止居中裁切 */
@@ -1953,8 +1959,14 @@ class SlidePresentation {
         document.querySelectorAll('a[href^="#slide-"]').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
-                const target = document.querySelector(link.getAttribute('href'));
-                if (target) smoothScrollTo(target);
+                const targetId = link.getAttribute('href').substring(1);
+                const idx = Array.from(this.slides).findIndex(s => s.id === targetId);
+                if (idx !== -1) {
+                    this.goToSlide(idx);
+                } else {
+                    const target = document.querySelector(link.getAttribute('href'));
+                    if (target) smoothScrollTo(target);
+                }
             });
         });
     }
