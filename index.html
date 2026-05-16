@@ -1460,14 +1460,11 @@ a.contact-item-value:hover { color: var(--accent-warm); }
     .hero-content { grid-template-columns: 1fr; }
     .hero-meta { display: none; }
 
-    /* 手机端底部余量统一：slide3/4/5 下滑到底部时有足够余量 */
-    .intro-slide .slide-content,
-    .skills-slide .slide-content {
-        padding-bottom: 3.5rem;
-    }
-    /* slide4 底部余量加大：给最后一个 work-item 加 margin-bottom */
-    .work-item[data-work="5"] {
-        margin-bottom: 5rem !important;
+    /* 900px：slide-3 文字上移，底部留白 */
+    .intro-slide .slide-content {
+        justify-content: flex-start;
+        padding-top: clamp(1.5rem, 4vw, 3rem);
+        padding-bottom: clamp(1.5rem, 4vw, 3rem);
     }
 }
 
@@ -1487,7 +1484,15 @@ a.contact-item-value:hover { color: var(--accent-warm); }
         overscroll-behavior-y: contain;
         justify-content: flex-start;
         padding-top: clamp(1.5rem, 4vh, 3rem);
-        padding-bottom: 8rem;
+        padding-bottom: clamp(1.5rem, 4vh, 3rem);
+    }
+    /* slide3：文字上移，底部留白，内容一页展示 */
+    .intro-slide .slide-content {
+        justify-content: flex-start;
+        padding-top: clamp(1.5rem, 4vh, 3rem);
+        padding-bottom: clamp(1.5rem, 4vh, 3rem);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
     .work-grid {
         grid-template-columns: 1fr;
@@ -1521,9 +1526,9 @@ a.contact-item-value:hover { color: var(--accent-warm); }
     .hero-orb { animation: none; }
 }
 
-/* 手机端 slide4 底部余量：实体空白元素（双重保障，配合 slide-content 的 padding-bottom） */
+/* 手机端 slide4 底部余量：实体空白元素（双重保障） */
 .mobile-bottom-spacer {
-    height: 10rem;
+    height: clamp(1.5rem, 4vh, 3rem);
     background: transparent;
 }
 
