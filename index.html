@@ -2196,8 +2196,8 @@ class SlidePresentation {
             // 锁定期间：始终阻止原生滚动
             if (wheelLocked) { e.preventDefault(); return; }
 
-            // slide-4 是长页面，允许原生滚动
-            if (posToSlideId(position) === 'slide-4') return;
+            // slide-4 / slide-5 是长页面，允许原生滚动
+            if (posToSlideId(position) === 'slide-4' || posToSlideId(position) === 'slide-5') return;
 
             // 其他 slide：阻止原生滚动，由 touchend 通过 goToPosition 控制
             e.preventDefault();
@@ -2209,8 +2209,9 @@ class SlidePresentation {
 
             if (wheelLocked) return;
 
-            // slide-4 由原生滚动处理，JS 不干预
-            if (posToSlideId(position) === 'slide-4') return;
+            // slide-4 / slide-5 是长页面，允许原生滚动
+            const currentSlideId = posToSlideId(position);
+            if (currentSlideId === 'slide-4' || currentSlideId === 'slide-5') return;
 
             // ---- 检测轻触 tap（移动距离 < 10px）→ 触发标签点击跳转 ----
             if (Math.abs(touchAccum) < 10) {
