@@ -2209,6 +2209,8 @@ class SlidePresentation {
 
             if (wheelLocked) return;
 
+            const currentSlideId = posToSlideId(position);
+
             // slide-4 / slide-5 是长页面：仅在内容滚到边界时才允许跳页
             const isLongSlide = currentSlideId === 'slide-4' || currentSlideId === 'slide-5';
             if (isLongSlide) {
