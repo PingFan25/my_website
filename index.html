@@ -2184,6 +2184,12 @@ class SlidePresentation {
             touchStartY = e.touches[0].clientY;
             touchAccum = 0;
             isTouching = true;
+
+            // 长 slide（slide-4/slide-5）：禁用外层 scroll-snap，让内容在内部自由滚动
+            const sid = posToSlideId(position);
+            if (sid === 'slide-4' || sid === 'slide-5') {
+                document.documentElement.style.scrollSnapType = 'none';
+            }
         }, { passive: true });
 
         document.addEventListener('touchmove', (e) => {
@@ -2208,6 +2214,9 @@ class SlidePresentation {
             isTouching = false;
 
             if (wheelLocked) return;
+
+            // 恢复 scroll-snap（touchstart 时可能被禁用）
+            document.documentElement.style.scrollSnapType = '';
 
             const currentSlideId = posToSlideId(position);
 
